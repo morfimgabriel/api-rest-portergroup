@@ -2,6 +2,7 @@
 using ApiRestPorter.Core.Interfaces;
 using ApiRestPorter.Web.ApiModels;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,21 +19,21 @@ namespace ApiRestPorter.Web.Api
         [HttpGet]
         public async Task<IActionResult> List(int apartmentId)
         {
-            var items = (await _repository.ListAsync(apartmentId)).Select(ResidentDTO.FromResident);
+            var items = (await _repository.ListAsync(apartmentId)).Select(GetResidentDTO.FromResident);
             return Ok(items);
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var resident = await _repository.GetByIdAsync<Resident>(id);
+            var resident = await _repository.GetByIdAsync(id);
             if (resident == null) return NotFound("Resident not found");
 
-            return Ok(ResidentDTO.FromResident(resident));
+            return Ok(GetResidentDTO.FromResident(resident));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] ResidentDTO body)
+        public async Task<IActionResult> Post([FromBody] CreateResidentDTO body)
         {
             var resident = new Resident()
             {
@@ -41,17 +42,34 @@ namespace ApiRestPorter.Web.Api
                 Cpf = body.Cpf,
                 Email = body.Email,
                 Telephone = body.Telephone,
-                ApartmentId = body.ApartmentId
+                ApartmentId = body.ApartmentId,
             };
             await _repository.AddAsync(resident);
-            return Ok(ResidentDTO.FromResident(resident));
+            return Ok(CreateResidentDTO.FromResident(resident));
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var resident = await _repository.GetByIdAsync<Resident>(id);
+            if (resident == null) return NotFound("Resident not found");
             await _repository.DeleteAsync<Resident>(resident);
+            return Ok();
+        }
+
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateResidentDTO putObject)
+        {
+            var resident = await _repository.GetByIdAsync<Resident>(id);
+            if (resident == null) return NotFound("Resident not found");
+
+            resident.FullName = putObject.FullName;
+            resident.BirthDate = putObject.BirthDate;
+            resident.Cpf = putObject.Cpf;
+            resident.Email = putObject.Email;
+            resident.Telephone = putObject.Telephone;
+            resident.ApartmentId = putObject.ApartmentId;
+            await _repository.UpdateAsync<Resident>(resident);
             return Ok();
         }
     }

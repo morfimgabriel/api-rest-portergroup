@@ -42,5 +42,6 @@ namespace ApiRestPorter.Web.Api
             await _repository.AddAsync(apartment);
             return Ok(ApartmentDTO.FromApartment(apartment));
         }
+
     }
 }
